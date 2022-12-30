@@ -124,7 +124,11 @@ class DecisionNode:
         - results is a dictionary that stores the result
           for this branch. Is None except for the leaves
         """
-        raise NotImplementedError
+        self.col = col
+        self.value = value
+        self.results = results
+        self.tb = tb
+        self.fb = fb
 
 
 def buildtree(part: Data, scoref=entropy, beta=0):
@@ -138,10 +142,15 @@ def buildtree(part: Data, scoref=entropy, beta=0):
 
     current_score = scoref(part)
     
+    if current_score == 0:
+        # No further partitioning
+        return DecisionNode(results=unique_counts(part))
+    
     # Set up some variables to track the best criteria
     best_gain = 0
     best_criteria = None
     best_sets = None
+        
     # ...
     #else:
     #    return DecisionNode(results=unique_counts(part))
@@ -151,6 +160,9 @@ def iterative_buildtree(part: Data, scoref=entropy, beta=0):
     """
     t10: Define the iterative version of the function buildtree
     """
+    raise NotImplementedError
+
+def classify(tree, values):
     raise NotImplementedError
 
 
@@ -198,15 +210,22 @@ def main():
         filename = sys.argv[1]
     except IndexError:
         filename = "decision_tree_example.txt"
-    read(filename)
     header, data = read(filename)
     print_data(header, data)
 
     print(unique_counts(data))
 
     print(gini_impurity(data))
+    print(gini_impurity([]))
+    print(gini_impurity([data[0]]))
 
     print(entropy(data))
+    print(entropy([]))
+    print(entropy([data[0]]))
+
+    headers, data = read(filename)
+    tree = buildtree(data)
+    #print_tree(tree, headers)
 
 
 if __name__ == "__main__":
