@@ -145,15 +145,39 @@ def buildtree(part: Data, scoref=entropy, beta=0):
     if current_score == 0:
         # No further partitioning
         return DecisionNode(results=unique_counts(part))
-    
+
     # Set up some variables to track the best criteria
     best_gain = 0
     best_criteria = None
     best_sets = None
-        
-    # ...
-    #else:
-    #    return DecisionNode(results=unique_counts(part))
+
+    column_count = len(part[0]) - 1
+
+    for col in range(0, column_count):
+        # Generate the list of different values in this column
+        column_values = {}
+        for row in part:
+            column_values[row[col]] = 1
+
+        for value in column_values.keys():
+            (set1, set2) = divideset(part, col, value, [], [])      
+
+            # Information gain
+            p = len(set1) / len(part)
+            gain = current_score - p * scoref(set1) - (1 - p) * scoref(set2)
+
+            if gain > best_gain and len(set1) > 0 and len(set2) > 0:    #this is the stop criterion
+                best_gain = gain
+                best_criteria = (col, value)
+                best_sets = (set1, set2)
+
+    if best_gain > beta:
+        true_branch = buildtree(best_sets[0], scoref, beta)
+        false_branch = buildtree(best_sets[1], scoref, beta)
+        return DecisionNode(col=best_criteria[0], value=best_criteria[1],
+                            tb=true_branch, fb=false_branch)
+    else:
+        return DecisionNode(results=unique_counts(part))
 
 
 def iterative_buildtree(part: Data, scoref=entropy, beta=0):
