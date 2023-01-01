@@ -146,7 +146,18 @@ def buildtree(part: Data, scoref=entropy, beta=0):
         # No further partitioning
         return DecisionNode(results=unique_counts(part))
 
-    # Set up some variables to track the best criteria
+    best_gain, best_criteria, best_sets = best_params_buildtree(part, scoref)
+
+    if best_gain > beta:
+        true_branch = buildtree(best_sets[0], scoref, beta)
+        false_branch = buildtree(best_sets[1], scoref, beta)
+        return DecisionNode(col=best_criteria[0], value=best_criteria[1],
+                            tb=true_branch, fb=false_branch)
+    else:
+        return DecisionNode(results=unique_counts(part))
+
+def best_params_buildtree(part: Data, scoref=entropy):
+    current_score = scoref(part)
     best_gain = 0
     best_criteria = None
     best_sets = None
@@ -166,25 +177,34 @@ def buildtree(part: Data, scoref=entropy, beta=0):
             p = len(set1) / len(part)
             gain = current_score - p * scoref(set1) - (1 - p) * scoref(set2)
 
-            if gain > best_gain and len(set1) > 0 and len(set2) > 0:    #this is the stop criterion
+            if gain > best_gain:    #this is the stop criterion
                 best_gain = gain
                 best_criteria = (col, value)
                 best_sets = (set1, set2)
-
-    if best_gain > beta:
-        true_branch = buildtree(best_sets[0], scoref, beta)
-        false_branch = buildtree(best_sets[1], scoref, beta)
-        return DecisionNode(col=best_criteria[0], value=best_criteria[1],
-                            tb=true_branch, fb=false_branch)
-    else:
-        return DecisionNode(results=unique_counts(part))
+    
+    return best_gain, best_criteria, best_sets
 
 
 def iterative_buildtree(part: Data, scoref=entropy, beta=0):
     """
     t10: Define the iterative version of the function buildtree
     """
-    raise NotImplementedError
+    if len(part) == 0:
+        return DecisionNode()
+
+    current_score = scoref(part)
+
+    if current_score == 0:
+        # No further partitioning
+        return DecisionNode(results=unique_counts(part))
+    
+    # Set up some variables to track the best criteria
+    best_gain = 0
+    best_criteria = None
+    best_sets = None
+
+
+    
 
 def classify(tree, values):
     raise NotImplementedError
