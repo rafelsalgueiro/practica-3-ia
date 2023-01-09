@@ -22,7 +22,6 @@ def read(file_name: str, separator: str = ",") -> Tuple[List[str], Data]:
                 header = values
                 continue
             data.append([_parse_value(v) for v in values])
-            print(values)
         return header,data
 
 def _parse_value(v):
@@ -144,6 +143,7 @@ def buildtree(part: Data, scoref=entropy, beta=0):
     
     if current_score == 0:
         # No further partitioning
+        print(unique_counts(part))
         return DecisionNode(results=unique_counts(part))
 
     best_gain, best_criteria, best_sets = best_params_buildtree(part, scoref)
@@ -206,7 +206,7 @@ def iterative_buildtree(part: Data, scoref=entropy, beta=0):
 
     
 
-def classify(tree, values):
+def classify(tree, row):
     raise NotImplementedError
 
 
