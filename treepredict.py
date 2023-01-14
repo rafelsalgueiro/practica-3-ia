@@ -202,7 +202,10 @@ def iterative_buildtree(part: Data, scoref=entropy, beta=0):
     best_gain = 0
     best_criteria = None
     best_sets = None
+    
+    best_gain, best_criteria, best_sets = best_params_buildtree(part, scoref)
 
+    return iterative_buildtree(best_sets[0], scoref, beta), iterative_buildtree(best_sets[1], scoref, beta), best_criteria
 
     
 
@@ -255,18 +258,24 @@ def main():
     except IndexError:
         filename = "decision_tree_example.txt"
     header, data = read(filename)
-    print_data(header, data)
+    #print_data(header, data)
 
+    print("----------Unique counts----------")
     print(unique_counts(data))
+    print(unique_counts([]))
+    print(unique_counts([data[0]]))
 
+    print("----------Gini impurity----------")
     print(gini_impurity(data))
     print(gini_impurity([]))
     print(gini_impurity([data[0]]))
 
+    print("----------Entropy----------")
     print(entropy(data))
     print(entropy([]))
     print(entropy([data[0]]))
 
+    print("----------Build tree----------")
     headers, data = read(filename)
     tree = buildtree(data)
     #print_tree(tree, headers)
