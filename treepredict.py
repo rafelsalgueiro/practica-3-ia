@@ -3,6 +3,7 @@ import sys
 import collections
 from math import log2
 from typing import List, Tuple
+import random
 
 # Used for typing
 Data = List[List]
@@ -142,8 +143,6 @@ def buildtree(part: Data, scoref=entropy, beta=0):
     current_score = scoref(part)
     
     if current_score == 0:
-        # No further partitioning
-        print(unique_counts(part))
         return DecisionNode(results=unique_counts(part))
 
     best_gain, best_criteria, best_sets = best_params_buildtree(part, scoref)
@@ -185,32 +184,68 @@ def best_params_buildtree(part: Data, scoref=entropy):
     return best_gain, best_criteria, best_sets
 
 
-def iterative_buildtree(part: Data, scoref=entropy, beta=0):
-    """
-    t10: Define the iterative version of the function buildtree
-    """
-    if len(part) == 0:
-        return DecisionNode()
+def iterative_buildtree(part, scoref=entropy, beta=0):
+    root = DecisionNode()
+    queue = [(root, part)]
+    while len(queue) > 0:
+        node, data = queue.pop(0)
+        if len(data) == 0:
+            continue
+        current_score = scoref(data)
+        best_gain = 0.0
+        best_criteria = None
+        best_sets = None
+        column_count = len(data[0]) - 1
+        for col in range(0, column_count):
+            column_values = {}
+            for row in data:
+                column_values[row[col]] = 1
+            for value in column_values.keys():
+                (set1, set2) = divideset(data, col, value, [], [])
+                p = float(len(set1)) / len(data)
+                gain = current_score - p*scoref(set1) - (1-p)*scoref(set2)
+                if gain > best_gain and len(set1) > 0 and len(set2) > 0:
+                    best_gain = gain
+                    best_criteria = (col, value)
+                    best_sets = (set1, set2)
+        if best_gain > beta:
+            trueBranch = DecisionNode()
+            falseBranch = DecisionNode()
+            node.col = best_criteria[0]
+            node.value = best_criteria[1]
+            node.tb = trueBranch
+            node.fb = falseBranch
+            queue.append((trueBranch, best_sets[0]))
+            queue.append((falseBranch, best_sets[1]))
+        else:
+            node.results = unique_counts(data)
+    return root
 
-    current_score = scoref(part)
 
-    if current_score == 0:
-        # No further partitioning
-        return DecisionNode(results=unique_counts(part))
+
     
-    # Set up some variables to track the best criteria
-    best_gain = 0
-    best_criteria = None
-    best_sets = None
-    
-    best_gain, best_criteria, best_sets = best_params_buildtree(part, scoref)
-
-    return iterative_buildtree(best_sets[0], scoref, beta), iterative_buildtree(best_sets[1], scoref, beta), best_criteria
-
-    
-
 def classify(tree, row):
-    raise NotImplementedError
+    while tree.results is None:
+        if isinstance (tree.value, (int, float)):
+            tree = tree.tb if _split_numeric(row, tree.col, tree.value) else tree.fb
+        tree = tree.tb if _split_categorical(row, tree.col, tree.value) else tree.fb
+
+    maximum = max(tree.results.values())
+    labels = [k for k, v in tree.results.items() if v == maximum]
+    return random.choice(labels)
+
+def prune(tree: DecisionNode, threshold: float):
+    if tree.tb.results is None:
+        prune(tree.tb, threshold)
+    if tree.fb.results is None:
+        prune(tree.fb, threshold)
+    if tree.fb.results is not None and tree.tb.results is not None:
+        tree.col = None
+        tree.value = None
+        tree.results = tree.tb.results + tree.fb.results
+        tree.tb = None
+        tree.fb = None
+    
 
 
 def print_tree(tree, headers=None, indent=""):
@@ -258,7 +293,7 @@ def main():
     except IndexError:
         filename = "decision_tree_example.txt"
     header, data = read(filename)
-    #print_data(header, data)
+    print_data(header, data)
 
     print("----------Unique counts----------")
     print(unique_counts(data))
@@ -278,7 +313,16 @@ def main():
     print("----------Build tree----------")
     headers, data = read(filename)
     tree = buildtree(data)
-    #print_tree(tree, headers)
+    iterative_tree = iterative_buildtree(data)
+    print_tree(tree, headers)
+    print("----------Iterative build tree----------")
+    print_tree(iterative_tree, headers)
+
+    print("----------Classify----------")
+    print(classify(tree, data[0]))
+
+    print("----------Prune----------")
+    prune(tree, 0.5)
 
 
 if __name__ == "__main__":

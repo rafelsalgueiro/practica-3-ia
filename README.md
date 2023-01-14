@@ -1,2 +1,3 @@
 # practica-3-ia
-Practica 3 inteligencia artificial machine learning
+Practica 3 inteligencia artificial
+    Machine learning
