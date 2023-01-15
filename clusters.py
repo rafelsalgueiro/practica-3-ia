@@ -1,5 +1,6 @@
 from typing import Tuple, List
 from math import sqrt
+import random
 
 
 def readfile(filename: str) -> Tuple[List, List, List]:
@@ -107,10 +108,56 @@ def printclust(clust: BiCluster, labels=None, n=0):
 
 
 # ......... K-MEANS ..........
-def kcluster(rows, distance, k=4):
+def kcluster(rows, distance, k=4, executions=10):
+    best_clusters = None
+    best_total_distance = float('inf')
+    for _ in range(executions):
+        # Determine the minimum and maximum values for each point
+        ranges=[(min([row[i] for row in rows]),
+        max([row[i] for row in rows])) for i in range(len(rows[0]))]
+        # Create k randomly placed centroids
+        clusters=[[random.random()*(ranges[i][1]-ranges[i][0])+ranges[i][0]
+        for i in range(len(rows[0]))] for j in range(k)]
+        lastmatches=None
+        total_distance = 0
+        for t in range(100):
+            bestmatches=[[] for i in range(k)]
+            # Find which centroid is the closest for each row
+            for j in range(len(rows)):
+                row=rows[j]
+                bestmatch=0
+                for i in range(k):
+                    d=distance(clusters[i],row)
+                    if d<distance(clusters[bestmatch],row): bestmatch=i
+                bestmatches[bestmatch].append(j)
+                total_distance += d
+            # If the results are the same as last time, done
+            if bestmatches==lastmatches: break
+            lastmatches=bestmatches
 
-    def _init_(self, rows, distance, k):
-        self.rows = rows
-        self.distance = distance
-        self.k = k
+            # Move the centroids to the average of their members
+            for i in range(k):
+                avgs=[0.0]*len(rows[0])
+                if len(bestmatches[i])>0:
+                    for rowid in bestmatches[i]:
+                        for m in range(len(rows[rowid])):
+                                avgs[m]+=rows[rowid][m]
+                    for j in range(len(avgs)):
+                        avgs[j]/=len(bestmatches[i])
+                    clusters[i]=avgs
+        if total_distance < best_total_distance:
+            best_total_distance = total_distance
+            best_clusters = clusters
+    return (best_clusters, best_total_distance)
 
+if __name__ == "__main__":
+    # Test the functions
+    # row_names, headers, data = readfile("blogdata.txt")
+    # printclust(hcluster(data))
+    # print(kcluster(data, euclidean))
+
+    # Test the functions
+    row_names, headers, data = readfile("blogdata.txt")
+    print (data)
+    printclust(hcluster(data))
+    #print(kcluster(data, euclidean))
