@@ -108,6 +108,9 @@ def printclust(clust: BiCluster, labels=None, n=0):
 
 # ......... K-MEANS ..........
 def kcluster(rows, distance, k=4):
-    # TODO
-    raise NotImplementedError
+
+    def _init_(self, rows, distance, k):
+        self.rows = rows
+        self.distance = distance
+        self.k = k
 

@@ -292,11 +292,6 @@ def print_data(headers, data):
         print("")
     print('-' * ((colsize + 1) * len(headers) + 1))
 
-#-------------------------Aggregation-------------------------#
-
-def mean (values : List[float]):
-    return sum(values)/len(values)
-
 #-----------------------------Main----------------------------#
 def main():
     try:
@@ -342,7 +337,7 @@ def main():
     print (evaluation.get_accuracy(tree, data))
 
     print("----------Cross validation----------")
-    print (evaluation.cross_validation(dataset=data, k=5, agg =mean(tree.results.values()), seed=0,scoref=entropy, beta=0.1, threshold=0))
+    print (evaluation.cross_validation(dataset=data, k=5, agg =evaluation.mean, seed=0,scoref=entropy, beta=0.1, threshold=0))
 
 
 
