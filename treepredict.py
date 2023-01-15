@@ -113,7 +113,7 @@ def divideset(part: Data, column: int, value: int, set1=None, set2=None) -> Tupl
 
 
 class DecisionNode:
-    def __init__(self, col=-1, value=None, results=None, tb=None, fb=None):
+    def __init__(self, col=-1, value=None, results=None, tb=None, fb=None, goodness=0):
         """
         t8: We have 5 member variables:
         - col is the column index which represents the
@@ -130,6 +130,7 @@ class DecisionNode:
         self.results = results
         self.tb = tb
         self.fb = fb
+        self.goodness = goodness
 
 
 def buildtree(part: Data, scoref=entropy, beta=0):
@@ -144,7 +145,7 @@ def buildtree(part: Data, scoref=entropy, beta=0):
     current_score = scoref(part)
     
     if current_score == 0:
-        return DecisionNode(results=unique_counts(part))
+        return DecisionNode(results=unique_counts(part), goodness=0)
 
     best_gain, best_criteria, best_sets = best_params_buildtree(part, scoref)
 
@@ -152,9 +153,9 @@ def buildtree(part: Data, scoref=entropy, beta=0):
         true_branch = buildtree(best_sets[0], scoref, beta)
         false_branch = buildtree(best_sets[1], scoref, beta)
         return DecisionNode(col=best_criteria[0], value=best_criteria[1],
-                            tb=true_branch, fb=false_branch)
+                            tb=true_branch, fb=false_branch, goodness=best_gain)
     else:
-        return DecisionNode(results=unique_counts(part))
+        return DecisionNode(results=unique_counts(part), goodness=best_gain)
 
 
 def best_params_buildtree(part: Data, scoref=entropy):
@@ -221,6 +222,7 @@ def iterative_buildtree(part, scoref=entropy, beta=0):
             queue.append((falseBranch, best_sets[1]))
         else:
             node.results = unique_counts(data)
+        root.goodness = best_gain
     return root
 
     
@@ -245,11 +247,12 @@ def prune(tree: DecisionNode, threshold: float):                            #pru
     if tree.fb.results is None:
         prune(tree.fb, threshold)
     if tree.fb.results is not None and tree.tb.results is not None:         #if both the subbranches are not empty
-        tree.col = None
-        tree.value = None
-        tree.results = tree.tb.results | tree.fb.results
-        tree.tb = None
-        tree.fb = None
+        if tree.goodness > threshold:                                       #if the goodness of the tree is greater than the threshold
+            tree.col = None
+            tree.value = None
+            tree.results = tree.tb.results | tree.fb.results
+            tree.tb = None
+            tree.fb = None
 
 #-------------------------Print functions-------------------------#
 

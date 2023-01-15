@@ -52,4 +52,4 @@ def cross_validation(dataset, k, agg, seed, scoref, beta, threshold):
         treepredict.prune(tree, threshold)
         accuracy = get_accuracy(tree, test)
         accuracies.append(accuracy)
-    return mean(accuracies)
+    return agg(accuracies)
