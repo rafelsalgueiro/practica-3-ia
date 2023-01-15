@@ -340,7 +340,7 @@ def main():
     print (evaluation.get_accuracy(tree, data))
 
     print("----------Cross validation----------")
-    print (evaluation.cross_validation(dataset=data, k=5, agg =evaluation.mean, seed=0,scoref=entropy, beta=0.1, threshold=0.375))
+    print (evaluation.cross_validation(dataset=data, k=5, agg =evaluation.mean, seed=0,scoref=entropy, beta=0.1, threshold=0.4))
 
 
 
