@@ -242,7 +242,7 @@ def prune(tree: DecisionNode, threshold: float):
     if tree.fb.results is not None and tree.tb.results is not None:
         tree.col = None
         tree.value = None
-        tree.results = tree.tb.results + tree.fb.results
+        tree.results = tree.tb.results | tree.fb.results
         tree.tb = None
         tree.fb = None
     
