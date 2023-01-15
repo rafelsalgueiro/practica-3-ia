@@ -22,8 +22,10 @@ def readfile(filename: str) -> Tuple[List, List, List]:
 # .........DISTANCES........
 # They are normalized between 0 and 1, where 1 means two vectors are identical
 def euclidean(v1, v2):
-    distance = 0  # TODO
-    return 1 / (1+distance)
+    distance = 0
+    for i in range(len(v1)):
+        distance += (v1[i] - v2[i]) ** 2
+    return sqrt(distance)
 
 def euclidean_squared(v1, v2):
     return euclidean(v1, v2)**2
@@ -135,7 +137,6 @@ def kcluster(rows, distance, k=4, executions=10):
             # If the results are the same as last time, done
             if bestmatches==lastmatches: break
             lastmatches=bestmatches
-
             # Move the centroids to the average of their members
             for i in range(k):
                 avgs=[0.0]*len(rows[0])
@@ -151,8 +152,20 @@ def kcluster(rows, distance, k=4, executions=10):
             best_clusters = clusters
     return (best_clusters, best_total_distance)
 
+def get_total_distance_by_k(rows, distance, k=5):
+    total_distance_by_k = {}
+    for k in range(1, k):
+        clusters, total_distance = kcluster(rows, distance, k=k)
+        total_distance_by_k[k] = total_distance
+    return total_distance_by_k
+
+
 if __name__ == "__main__":
 
     # Test the functions
     row_names, headers, data = readfile("blogdata.txt")
-    print(kcluster(data, euclidean))
+    print ("------------------K-MEANS------------------")
+    best_clusters, best_total_distance = kcluster(data, pearson)
+    print("Best clusters: ", best_clusters,"Best total distace:", best_total_distance)
+    print ("------------------TOTAL DISTANCE OF EACH K------------------")
+    print(get_total_distance_by_k(data, euclidean))
