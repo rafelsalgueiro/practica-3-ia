@@ -1,4 +1,5 @@
 import random
+import treepredict
 from typing import Union, List
 
 
@@ -23,7 +24,11 @@ def train_test_split(dataset, test_size: Union[float, int], seed=None):
 
 
 def get_accuracy(classifier, dataset):
-    raise NotImplementedError
+    correct = 0
+    for row in dataset:
+        if treepredict.classify(classifier, row) == row[-1]:
+            correct += 1
+    return correct / len(dataset)
 
 
 def mean(values: List[float]):
@@ -31,4 +36,20 @@ def mean(values: List[float]):
 
 
 def cross_validation(dataset, k, agg, seed, scoref, beta, threshold):
-    raise NotImplementedError
+    random.seed(seed)
+    random.shuffle(dataset)
+    folds = []
+    for i in range(k):
+        folds.append(dataset[i::k])
+    accuracies = []
+    for i in range(k):
+        train = []
+        for j in range(k):
+            if j != i:
+                train += folds[j]
+        test = folds[i]
+        tree = treepredict.buildtree(train, scoref, beta)
+        treepredict.prune(tree, threshold)
+        accuracy = get_accuracy(tree, test)
+        accuracies.append(accuracy)
+    return sum(accuracies) / len(accuracies)

@@ -3,6 +3,7 @@ import sys
 import collections
 from math import log2
 from typing import List, Tuple
+import evaluation
 import random
 
 # Used for typing
@@ -155,6 +156,7 @@ def buildtree(part: Data, scoref=entropy, beta=0):
     else:
         return DecisionNode(results=unique_counts(part))
 
+
 def best_params_buildtree(part: Data, scoref=entropy):
     current_score = scoref(part)
     best_gain = 0
@@ -174,7 +176,7 @@ def best_params_buildtree(part: Data, scoref=entropy):
 
             # Information gain
             p = len(set1) / len(part)
-            gain = current_score - p * scoref(set1) - (1 - p) * scoref(set2)
+            gain = current_score - p*scoref(set1) - (1-p)*scoref(set2)
 
             if gain > best_gain:    #this is the stop criterion
                 best_gain = gain
@@ -221,32 +223,35 @@ def iterative_buildtree(part, scoref=entropy, beta=0):
             node.results = unique_counts(data)
     return root
 
-
-
     
-def classify(tree, row):
+def classify(tree, row):                                                    #classify the row
     while tree.results is None:
-        if isinstance (tree.value, (int, float)):
-            tree = tree.tb if _split_numeric(row, tree.col, tree.value) else tree.fb
-        tree = tree.tb if _split_categorical(row, tree.col, tree.value) else tree.fb
+        tree = tree.tb if _classify_function(tree, row) else tree.fb
 
     maximum = max(tree.results.values())
     labels = [k for k, v in tree.results.items() if v == maximum]
     return random.choice(labels)
 
-def prune(tree: DecisionNode, threshold: float):
+def _classify_function(tree, row):                                          #classify the row
+    if isinstance(tree.value, (int, float)):
+        return _split_numeric(row, tree.col, tree.value)
+    return _split_categorical(row, tree.col, tree.value)
+
+
+
+def prune(tree: DecisionNode, threshold: float):                            #prune the tree
     if tree.tb.results is None:
         prune(tree.tb, threshold)
     if tree.fb.results is None:
         prune(tree.fb, threshold)
-    if tree.fb.results is not None and tree.tb.results is not None:
+    if tree.fb.results is not None and tree.tb.results is not None:         #if both the subbranches are not empty
         tree.col = None
         tree.value = None
         tree.results = tree.tb.results | tree.fb.results
         tree.tb = None
         tree.fb = None
-    
 
+#-------------------------Print functions-------------------------#
 
 def print_tree(tree, headers=None, indent=""):
     """
@@ -287,6 +292,12 @@ def print_data(headers, data):
         print("")
     print('-' * ((colsize + 1) * len(headers) + 1))
 
+#-------------------------Aggregation-------------------------#
+
+def mean (values : List[float]):
+    return sum(values)/len(values)
+
+#-----------------------------Main----------------------------#
 def main():
     try:
         filename = sys.argv[1]
@@ -311,18 +322,29 @@ def main():
     print(entropy([data[0]]))
 
     print("----------Build tree----------")
-    headers, data = read(filename)
     tree = buildtree(data)
-    iterative_tree = iterative_buildtree(data)
-    print_tree(tree, headers)
+    print_tree(tree, header)
+
     print("----------Iterative build tree----------")
-    print_tree(iterative_tree, headers)
+    iterative_tree = iterative_buildtree(data)
+    print_tree(iterative_tree, header)
 
     print("----------Classify----------")
     print(classify(tree, data[0]))
 
     print("----------Prune----------")
-    prune(tree, 0.5)
+    prune(tree, 0.1)
+    print_tree(tree, header)
+
+    print ("\n\n------------------------------Evaluation------------------------------\n")
+    
+    print("----------Accuracy----------")
+    print (evaluation.get_accuracy(tree, data))
+
+    print("----------Cross validation----------")
+    print (evaluation.cross_validation(dataset=data, k=5, agg =mean(tree.results.values()), seed=0,scoref=entropy, beta=0.1, threshold=0))
+
+
 
 
 if __name__ == "__main__":
