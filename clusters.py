@@ -109,6 +109,7 @@ def printclust(clust: BiCluster, labels=None, n=0):
 
 # ......... K-MEANS ..........
 def kcluster(rows, distance, k=4, executions=10):
+    cluster_id = 0
     best_clusters = None
     best_total_distance = float('inf')
     for _ in range(executions):
@@ -151,13 +152,7 @@ def kcluster(rows, distance, k=4, executions=10):
     return (best_clusters, best_total_distance)
 
 if __name__ == "__main__":
-    # Test the functions
-    # row_names, headers, data = readfile("blogdata.txt")
-    # printclust(hcluster(data))
-    # print(kcluster(data, euclidean))
 
     # Test the functions
     row_names, headers, data = readfile("blogdata.txt")
-    print (data)
-    printclust(hcluster(data))
-    #print(kcluster(data, euclidean))
+    print(kcluster(data, euclidean))
